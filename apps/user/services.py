@@ -1,3 +1,5 @@
+import logging
+
 from fastapi import HTTPException
 
 from typing import Optional
@@ -8,6 +10,9 @@ from core.security import get_hashed_password
 
 from apps.auth.services import get_web_url, create_uuid, send_email
 from apps.user.schemas import UserCreate, UserInDb
+
+
+logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.INFO)
 
 
 async def get_user_from_email(email: str) -> dict or None:
@@ -42,7 +47,8 @@ async def user_create(request_dict: dict, item: UserCreate, additional_text: Opt
         user = await User.create(**item_dict)
         item_dict.update({'id': user.pk})
     except Exception as e:
-        raise HTTPException(status_code=404, detail=e)
+        logging.info(e)
+        raise HTTPException(status_code=400, detail={'error': f'bad request {str(e)}'})
     uid_items = await create_uuid(user_id=user.pk)
     await send_email(
         title='This is your verification link:',
@@ -58,7 +64,6 @@ async def user_verification(u: str, pk: int) -> None:
 
     true_uuid = await Uid.get_or_none(pk=pk)
     if true_uuid is not None and true_uuid.uid == u:
-        # if true_uuid['uid'] == u:
         await User.filter(pk=true_uuid.pk).update(**{'is_active': True})
         await Uid.filter(pk=pk).delete()
 

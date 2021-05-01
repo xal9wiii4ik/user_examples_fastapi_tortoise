@@ -1,5 +1,6 @@
 import smtplib
 import uuid
+import logging
 
 from fastapi import HTTPException
 
@@ -16,6 +17,9 @@ from core.config import (
     EMAIL_USERNAME,
 )
 from apps.auth.models import Uid
+
+
+logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.INFO)
 
 
 async def send_email(title: str, link: str, email: str, additional_text: str):
@@ -53,7 +57,8 @@ async def create_uuid(user_id: Optional[int] = None, social_user_id: Optional[in
         items.update({'pk': uid.pk})
         return items
     except Exception as e:
-        raise HTTPException(status_code=404, detail=e)
+        logging.info(e)
+        raise HTTPException(status_code=400, detail={'error': f'bad request {str(e)}'})
 
 
 async def get_web_url(request_dict: dict) -> str:

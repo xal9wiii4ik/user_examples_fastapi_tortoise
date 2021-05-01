@@ -1,4 +1,5 @@
 import jwt
+import logging
 
 from fastapi import Request, HTTPException
 
@@ -15,6 +16,9 @@ from core.config import (
 from core.security import verify_password
 
 
+logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.INFO)
+
+
 async def authenticate_user(password: str, username: str = None, email: str = None) -> dict or None:
     """ Authenticate user """
 
@@ -25,7 +29,7 @@ async def authenticate_user(password: str, username: str = None, email: str = No
         if verify_password(plain_password=password, hashed_password=user.hashed_password):
             return user
         else:
-            raise HTTPException(status_code=404, detail='invalid password')
+            raise HTTPException(status_code=400, detail='invalid password')
 
 
 async def authenticate(request: Request) -> dict or None:
@@ -42,7 +46,7 @@ async def authenticate(request: Request) -> dict or None:
                 if user is not None:
                     return user
             except Exception as e:
-                print(e)
+                logging.info(e)
     raise HTTPException(status_code=401, detail='Given credentials are not provide')
 
 
